@@ -15,6 +15,8 @@ import {Motion, spring} from 'react-motion';
 
 Animate a counter from `0` to `10`. For more advanced usage, see below.
 
+上面是一个从 `0` 到 `10` 的计数器动画。更多高级用法请继续阅读。
+
 ### Install
 
 - Npm: `npm install --save react-motion`
@@ -65,12 +67,17 @@ npm install
 To build the repo yourself: `npm run prepublish`.
 
 ## What does this library try to solve?
+## 这个库解决什么问题？
 
 [My React-Europe talk](https://www.youtube.com/watch?v=1tavDv5hXpo)
 
 For 95% of use-cases of animating components, we don't have to resort to using hard-coded easing curves and duration. Set up a stiffness and damping for your UI element, and let the magic of physics take care of the rest. This way, you don't have to worry about petty situations such as interrupted animation behavior. It also greatly simplifies the API.
 
+对于 95% 的组件动画场景，我们都不需要硬编码动画的持续时间和变换曲线。只需要给 UI 元素设置 stiffness（刚度） 和 damping（减振），然后把剩下的工作交给物理去实现。采用这种方式后你就不必许担心一些动画过程中的小细节。这种方式还大大的简化了 API。
+
 This library also provides an alternative, more powerful API for React's `TransitionGroup`.
+
+这个库也提供了比 React 的 `TransitionGroup` 更强大的 API。
 
 ## API
 
@@ -92,16 +99,30 @@ P.S. using TypeScript? [Here](https://github.com/DefinitelyTyped/DefinitelyTyped
 ##### - spring: (val: number, config?: SpringHelperConfig) => OpaqueConfig
 Used in conjunction with the components below. Specifies the how to animate to the destination value, e.g. `spring(10, {stiffness: 120, damping: 17})` means "animate to value 10, with a spring of stiffness 120 and damping 17".
 
-- `val`: the value.
-- `config`: optional, for further adjustments. Possible fields:
-  - `stiffness`: optional, defaults to `170`.
-  - `damping`: optional, defaults to `26`.
-  - `precision`: optional, defaults to `0.01`. Specifies both the rounding of the interpolated value and the speed (internal).
+（首先，译者提醒：spring 除了可以指春天，它还有弹簧、弹跳的意思）该方法配合后面的组件进行使用。它指定如何将值变换到目标值，如 `spring(10, {stiffness: 120, damping: 17})` 代表 “在弹性刚度为 120 减振为 17 的情况下（将初始值）变换到目标值 10”
+
+- `val`: 目标值。
+- `config`: 可选参数, 用于对默认值做进一步调整. 可选字段有:
+  - `stiffness`: 可选参数, 默认为 `170`。
+  - `damping`: 可选参数, 默认为 `26`。
+  - `precision`: 可选参数, 默认为 `0.01`，指定了中途插值的精度和速度（内部）。
 
   It's normal not to feel how stiffness and damping affect your spring; use [Spring Parameters Chooser](http://chenglou.github.io/react-motion/demos/demo5-spring-parameters-chooser) to get a feeling. **Usually**, you'd just use the list of tasteful stiffness/damping presets below.
 
 ##### - Presets for `{stiffness, damping}`
 Commonly used spring configurations used like so: `spring(10, presets.wobbly)` or `spring(20, {...presets.gentle, precision: 0.1})`. [See here](https://github.com/chenglou/react-motion/blob/9cb90eca20ecf56e77feb816d101a4a9110c7d70/src/presets.js).
+
+这是一些预置的 spring config 场景，可以像 `spring(10, presets.wobbly)` 或者 `spring(20, {...presets.gentle, precision: 0.1})` 这样使用，参考 [这里]((https://github.com/chenglou/react-motion/blob/9cb90eca20ecf56e77feb816d101a4a9110c7d70/src/presets.js)) 或如下：
+
+```js
+/* @flow */
+export default {
+  noWobble: {stiffness: 170, damping: 26}, // the default, if nothing provided
+  gentle: {stiffness: 120, damping: 14},
+  wobbly: {stiffness: 180, damping: 12},
+  stiff: {stiffness: 210, damping: 20},
+};
+```
 
 ---
 
@@ -119,21 +140,29 @@ Commonly used spring configurations used like so: `spring(10, presets.wobbly)` o
 
 Required. The `Style` type is an object that maps to either a `number` or an `OpaqueConfig` returned by `spring()` above. Must keep the same keys throughout component's existence. The meaning of the values:
 
-- an `OpaqueConfig` returned from `spring(x)`: interpolate to `x`.
-- a `number` `x`: jump to `x`, do not interpolate.
+必填参数。`Style` 类型是一个属性值为 `number` 或者 `spring()` 返回的 `OpaqueConfig` 类型的对象。它的键在组件的整个存在过程中应该保持一致。其值分别代表：
+
+- 如果是 `spring(x)` 返回的 `OpaqueConfig`，则将值从初始值渐变（即插值，中途插入多个中间值）到 `x`.
+- 如果是 `number` `x`: 则直接从初始值跳到 `x`, 而不会渐变.
 
 ##### - defaultStyle?: PlainStyle
 Optional. The `PlainStyle` type maps to `number`s. Defaults to an object with the same keys as `style` above, whose values are the initial numbers you're interpolating on. **Note that during subsequent renders, this prop is ignored. The values will interpolate from the current ones to the destination ones (specified by `style`)**.
 
+可选参数。`PlainStyle` 类型是值为 `number` 的对象。默认与 `style` 具有相同的字段，其值为渐变的初始数值。**注意，在接下来的渲染中，该属性会被忽略。其值会从当前值渐变到目标值（通过 `style` 指定）**
+
 ##### - children: (interpolatedStyle: PlainStyle) => ReactElement
 Required **function**.
 
-- `interpolatedStyle`: the interpolated style object passed back to you. E.g. if you gave `style={{x: spring(10), y: spring(20)}}`, you'll receive as `interpolatedStyle`, at a certain time, `{x: 5.2, y: 12.1}`, which you can then apply on your `div` or something else.
+必填参数，**function**
 
-- Return: must return **one** React element to render.
+- `interpolatedStyle`：返回给你的渐变的 style 对象。如当你指定 `style={{x: spring(10), y: spring(20)}}` 时，在某个特定的时间你可能会接收到 `interpolatedStyle` 为 `{x: 5.2, y: 12.1}` 这样的值，此时你可以将它运用到你的 `div` 或者其它你想使用的地方。
+
+- 返回值：必须返回 **单个** React 元素
 
 ##### - onRest?: () => void
 Optional. The callback that fires when the animation comes to a rest.
+
+可选参数。当动画完成时的回调函数。
 
 ---
 
@@ -181,17 +210,25 @@ Required **function**. Similar to `Motion`'s `children`, but accepts the array o
 ---
 
 ### &lt;TransitionMotion />
-**Helps you to do mounting and unmounting animation**.
+**帮助你完成组件的挂载和卸载动画**
 
 #### Usage
 
 You have items `a`, `b`, `c`, with their respective style configuration, given to `TransitionMotion`'s `styles`. In its `children` function, you're passed the three interpolated styles as params; you map over them and produce three components. All is good.
 
+如果你给 `TransitionMotion` 的 `styles` 指定了具有各自 style 配置的 `a`、`b`、`c` 3 项，则在其 `children` 函数中你会收到 3 个插值 style 作为参数。你可以遍历它们并生成 3 个组件。
+
 During next render, you give only `a` and `b`, indicating that you want `c` gone, but that you'd like to animate it reaching value `0`, before killing it for good.
+
+在接下来的渲染中，你只给了 `a` 和 `b` 两项，表示你希望将 `c` 移除，但是你希望在移除它之前完成值到 0 的动画。
 
 Fortunately, `TransitionMotion` has kept `c` around and still passes it into the `children` function param. So when you're mapping over these three interpolated styles, you're still producing three components. It'll keep interpolating, while checking `c`'s current value at every frame. Once `c` reaches the specified `0`, `TransitionMotion` will remove it for good (from the interpolated styles passed to your `children` function).
 
+幸运的是，`TransitionMotion` 保留了 `c` 且仍然将它传给 `children` 函数作为参数。所以当你遍历这 3 个插值 style 时仍然可以生成 3 个组件。它会一致进行变换并在每一次变换时都检查 `c` 的当前值。一旦 `c` 到达指定值 `0`，`TransitionMotion` 将会将它移除（从传递给 `children` 函数的插值 style 中）
+
 This time, when mapping through the two remaining interpolated styles, you'll produce only two components. `c` is gone for real.
+
+此时。当遍历剩下的两个插值 style 时，你就只能生成两个组件，`c` 就真正的被移除了。
 
 ```jsx
 import createReactClass from 'create-react-class';
@@ -237,15 +274,22 @@ const Demo = createReactClass({
 
 First, two type definitions to ease the comprehension.
 
+首先，明确两个定义：
+
 - `TransitionStyle`: an object of the format `{key: string, data?: any, style: Style}`.
+- `TransitionStyle`：具有 `{key: string, data?: any, style: Style}` 这种格式的对象
 
   - `key`: required. The ID that `TransitionMotion` uses to track which configuration is which across renders, even when things are reordered. Typically reused as the component `key` when you map over the interpolated styles.
+  - `key`：必须参数。`TransitionMotion` 用于跟踪渲染配置的 ID，即便是被重新排序。通常在遍历插值 style 时将其复用为组件的 `key`
 
   - `data`: optional. Anything you'd like to carry along. This is so that when the previous section example's `c` disappears, you still get to access `c`'s related data, such as the text to display along with it.
+  - `data`：可选参数。任何你想携带的数据。在前面的示例中，在 `c` 消失后你依然可以访问 `c` 相关的数据，例如需要与之一起显示的相关文本等。
 
   - `style`: required. The actual starting style configuration, similar to what you provide for `Motion`'s `style`. Maps keys to either a number or an `OpaqueConfig` returned by `spring()`.
+  - `style`：必须参数。实际的起始 style 配置，同  `Motion` 的 `style` 类似。属性值为数字或者 `OpaqueConfig` 类型
 
 - `TransitionPlainStyle`: similar to above, except the `style` field's value is of type `PlainStyle`, aka an object that maps to numbers.
+- `TransitionPlainStyle`：同上，只是 `style` 字段的值是 `PlainStyle` 类型，即属性值为数字的对象。
 
 ##### - styles: Array&lt;TransitionStyle> | (previousInterpolatedStyles: ?Array&lt;TransitionPlainStyle>) => Array&lt;TransitionStyle>
 Required. Accepts either:
